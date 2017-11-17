@@ -6,7 +6,7 @@ It's possible to delegate the subdomain `_acme-challenge` and handle LE (Let's E
 Initial version of this program uses a local TinyDNS-server to respond with the text-record for the LE DNS-challange.
 Future plan is to "embed" DNS-funcionality and make this application standalone (credits for this idea: Peter Hellberg).
 
-Needed parameters (now hardcoded in source..):
+## Needed parameters (now hardcoded in source..):
 * Domain for the cert (think of the upcoming support for wildcard certs)
 * Email address (for "Cert-admin")
 * Key size in number of bits for the cert (default could be 2048)
@@ -15,13 +15,19 @@ Needed parameters (now hardcoded in source..):
 * Path including filename for the private key of the cert we want to create
 * Delay in seconds between creation of text-record and the "client.Accept()" call
 * URL of the LE API (there is a "staging" also, for test)
+* Logging options (like syslog or path to a file or something)
 
-DNS related future parameters needed:
+## DNS related future parameters needed:
 * IP to listen on
 * FQDN for the "DNS-service"
 * Port to listen on (default 53, makes it possible to run without root if a firewall redirects it from something >1024)
 
-How to delegate a subdomain in DNS:
-* TinyDNS:
+## How to delegate a subdomain in DNS:
+* TinyDNS:  
+Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` in your config. Where `domain.com`is the domain to create cert for, `dnsserver.somedomain.com`is FQDN for the host running goacmedns and `60` is the TTL for this record.
 * BIND:
 * Other DNS's and "providers"
+
+## Examples of usage:
+
+## Credits:
