@@ -4,7 +4,7 @@ Handle Let's Encrypt DNS challenges
 It's possible to delegate the subdomain `_acme-challenge` and handle LE (Let's Encrypt) DNS-challenges with one specific DNS-server (instead of waiting for "sync"). This also makes it possible to have most of the DNS-functionality "outsourced".
 
 Initial version of this program uses a local TinyDNS-server to respond with the text-record for the LE DNS-challange.
-Future plan is to "embed" DNS-funcionality and make this application standalone (credit for this idea: Peter Hellberg).
+Future plan is to "embed" DNS-funcionality and make this application standalone (credit for this embed-idea: @PeterHellberg).
 
 ## Needed parameters (now hardcoded in source..):
 * Domain for the cert (think of the upcoming support for wildcard certs)
@@ -31,3 +31,6 @@ Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` 
 ## Examples of usage:
 
 ## Credits:
+(note: Don't forget to find the code from Stack Overflow this is based on)
+
+:trollface:
