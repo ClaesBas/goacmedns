@@ -13,7 +13,7 @@ Future plan is to "embed" DNS-funcionality and make this application standalone 
 * Path including filename for LE private key (gets registered at LE as an "account")
 * Path including filename for the cert we want to create
 * Path including filename for the private key of the cert we want to create
-* Delay in seconds between creation of text-record and the "client.Accept()" call
+* Delay in seconds between creation of text-record and the "client.Accept()" call (not needed with embedded DNS)
 * URL of the LE API (there is a "staging" also, for test)
 * Logging options (like syslog or path to a file or something)
 
