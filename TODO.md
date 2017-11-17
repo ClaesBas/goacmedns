@@ -1,12 +1,14 @@
 # TODO
 ##### File: goacmedns/TODO.md
 
-Handle the DNS (text record) internally (instead of with TinyDNS)
+### * Handle the DNS (text record) internally (instead of with TinyDNS)
 
-Parameters as env's or configfile (or handle both)
+### * Parameters as env's or configfile (or handle both)
 
-Better error handling
+### * Better error handling
 
-Tests
+### * Tests
 
-Documentation, documentation, documentation
+### * Logging to syslog and/or file
+
+### * Documentation, documentation, documentation
