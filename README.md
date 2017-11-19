@@ -24,13 +24,13 @@ Future plan is to "embed" DNS-funcionality and make this application standalone 
 
 ## How to delegate a subdomain in DNS:
 * TinyDNS:  
-Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` in your config. Where `domain.com`is the domain to create cert for, `dnsserver.somedomain.com`is FQDN for the host running goacmedns and `60` is the TTL for this record.
+Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` in your config. Where `domain.com`is the domain to create cert for, `dnsserver.somedomain.com`is FQDN for the host running goacmedns (and TinyDNS until we manage to reply with "built in" DNS) and `60` is the TTL for this record.
 * BIND:
 * Other DNS's and "providers"
 
 ## Examples of usage:
 
 ## Credits:
-(note: Don't forget to find the code from Stack Overflow this is based on)
+Alex @x1ddos, for his snippet: https://github.com/golang/go/issues/17263#issuecomment-253149953
 
 :trollface:
