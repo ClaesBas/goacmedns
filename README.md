@@ -101,6 +101,8 @@ DNS delegation examples for more than TinyDNS
 
 Should maybe "staging" have it's own parameter (staging & S or s)?
 
+Test if [CAA record](https://support.dnsimple.com/articles/caa-record/) speeds up the "process" 
+
 ## Credits
 
 Alex @x1ddos, for his [snippet](https://github.com/golang/go/issues/17263#issuecomment-253149953)
