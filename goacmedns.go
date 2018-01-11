@@ -34,7 +34,7 @@ var domain string
 var email string
 var keySize int
 
-var workPath = "./" // Where to create and to find certificates
+var workPath string
 
 func init() {
 
@@ -60,7 +60,7 @@ func init() {
 	flag.StringVar(&domain, "d", "", "Short for: `domain`")
 
 	flag.StringVar(&workPath, "path", ".", "Working directory path")
-	flag.StringVar(&workPath, "p", "", "Short for: `path`")
+	flag.StringVar(&workPath, "p", ".", "Short for: `path`")
 
 	flag.IntVar(&timeOut, "timeout", 90, "Timeout in seconds for DNS requests (from LE)")
 	flag.IntVar(&timeOut, "t", 90, "Short for: `timeout`")
@@ -97,10 +97,15 @@ func main() {
 		email = "hostmaster@" + emailDomain
 	}
 
-	if workPath[len(workPath)-1] != "/"[0] {
-		workPath = workPath + "/"
+	if len(workPath) == 1 {
+		if workPath != "/" {
+			workPath += "/"
+		}
+	} else {
+		if workPath[len(workPath)-1] != "/"[0] {
+			workPath += "/"
+		}
 	}
-
 	var directoryURL string
 	if debug {
 		directoryURL = "https://acme-staging.api.letsencrypt.org/directory"
@@ -219,20 +224,11 @@ func main() {
 		if a.Status != acme.StatusValid {
 			log.Fatal("domain authorization failed (" + a.Status + ")")
 		}
-
 		if verbose {
 			log.Println("Authorization succeded!")
 		}
 
 		closeDNSServer()
-
-		//Wait for the DNS-server to shutdown
-		//select {
-		// case err := <-serverCh:
-		// 	if err != nil {
-		// 		log.Fatal(err)
-		// 	}
-		// }
 
 		if debug {
 			log.Println("DNS server stopped")
@@ -292,5 +288,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

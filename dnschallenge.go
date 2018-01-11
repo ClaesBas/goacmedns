@@ -24,28 +24,11 @@ func appendAnswer(m *dns.Msg, answer string) {
 
 func parseQuery(m *dns.Msg) {
 	for _, q := range m.Question {
-		switch q.Qtype {
-		case dns.TypeTXT:
+		if q.Qtype == dns.TypeTXT {
 			if verbose {
 				log.Printf("TXT query for %s\n", q.Name)
 			}
-			appendAnswer(m, fmt.Sprintf("%s 90 IN TXT %s", q.Name, dnsChallengeString)) // Maybe TTL from the timeout parameter
-
-			// case dns.TypeSOA:
-			// 	if verbose {
-			// 		log.Printf("SOA query for %s\n", q.Name)
-			// 		//dns.SOA
-			// 	}
-			// case dns.TypeNS:
-			// 	if verbose {
-			// 		log.Printf("NS query for %s\n", q.Name)
-			// 	}
-			// 	appendAnswer(m, fmt.Sprintf("%s 60 IN NS %s", q.Name, hostName))
-			// case dns.TypeANY:
-			// 	if verbose {
-			// 		log.Printf("ANY query for %s\n", q.Name)
-			// 	}
-			// 	appendAnswer(m, fmt.Sprintf("%s 60 IN NS %s", q.Name, hostName))
+			appendAnswer(m, fmt.Sprintf("%s %d IN TXT %s", q.Name, timeOut, dnsChallengeString))
 		}
 	}
 }
@@ -54,8 +37,7 @@ func handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Compress = false
-	switch r.Opcode {
-	case dns.OpcodeQuery:
+	if r.Opcode == dns.OpcodeQuery {
 		parseQuery(m)
 	}
 	w.WriteMsg(m)
