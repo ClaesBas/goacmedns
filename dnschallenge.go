@@ -29,7 +29,7 @@ func parseQuery(m *dns.Msg) {
 			if verbose {
 				log.Printf("TXT query for %s\n", q.Name)
 			}
-			appendAnswer(m, fmt.Sprintf("%s 60 IN TXT %s", q.Name, dnsChallengeString))
+			appendAnswer(m, fmt.Sprintf("%s 90 IN TXT %s", q.Name, dnsChallengeString)) // Maybe TTL from the timeout parameter
 
 			// case dns.TypeSOA:
 			// 	if verbose {
@@ -85,15 +85,13 @@ func serveDNSChallenge(addr, domainName, challenge string) {
 	}
 	go func() {
 		serveUDP = &dns.Server{Addr: addr, Net: "udp"}
-		err := serveUDP.ListenAndServe()
-		if err != nil {
+		if err := serveUDP.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 	go func() {
 		serveTCP = &dns.Server{Addr: addr, Net: "tcp"}
-		err := serveTCP.ListenAndServe()
-		if err != nil {
+		if err := serveTCP.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}()
