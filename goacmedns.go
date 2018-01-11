@@ -60,7 +60,7 @@ func init() {
 	flag.StringVar(&domain, "d", "", "Short for: `domain`")
 
 	flag.StringVar(&workPath, "path", ".", "Working directory path")
-	flag.StringVar(&domain, "p", "", "Short for: `path`")
+	flag.StringVar(&workPath, "p", "", "Short for: `path`")
 
 	flag.IntVar(&timeOut, "timeout", 90, "Timeout in seconds for DNS requests (from LE)")
 	flag.IntVar(&timeOut, "t", 90, "Short for: `timeout`")
