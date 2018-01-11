@@ -99,6 +99,8 @@ Firewall config examples (for iptables, pf, ipf ...)
 
 DNS delegation examples for more than TinyDNS
 
+Should maybe "staging" have it's own parameter (staging & S or s)?
+
 ## Credits
 
 Alex @x1ddos, for his [snippet](https://github.com/golang/go/issues/17263#issuecomment-253149953)
