@@ -44,8 +44,8 @@ func init() {
 	flag.BoolVar(&verbose, "verbose", false, "Verbose mode (some extra output)")
 	flag.BoolVar(&verbose, "v", false, "Short for `verbose (bool)`")
 
-	flag.StringVar(&listen, "listen", ":53053", "Listen address for embedded DNS-server")
-	flag.StringVar(&listen, "l", ":53053", "Short for: `listen`")
+	flag.StringVar(&listen, "listen", "127.0.0.1:53053", "Listen address for embedded DNS-server")
+	flag.StringVar(&listen, "l", "127.0.0.1:53053", "Short for: `listen`")
 
 	//flag.StringVar(&hostName, "fqdn", "", "(*) FQDN (hostname) for the embedded DNS-server")
 	//flag.StringVar(&hostName, "f", "", "Short for: `fqdn`")

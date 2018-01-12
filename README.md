@@ -101,8 +101,11 @@ DNS delegation examples for more than TinyDNS
 
 Should maybe "staging" have it's own parameter (staging & S or s)?
 
-Test if [CAA record](https://support.dnsimple.com/articles/caa-record/) speeds up the "process" 
+Test if [CAA record](https://support.dnsimple.com/articles/caa-record/) speeds up the "process"
 
+## Known problems
+
+If listen's IP not defined (like ":53053") the DNS service not send answers from localhost
 ## Credits
 
 Alex @x1ddos, for his [snippet](https://github.com/golang/go/issues/17263#issuecomment-253149953)
