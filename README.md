@@ -30,9 +30,9 @@ Usage of ./goacmedns:
   -keysize int
         Keysize of requested certificate (default 2048)
   -l listen
-        Short for: listen (default ":53053")
+        Short for: listen (default "127.0.0.1:53053")
   -listen string
-        Listen address for embedded DNS-server (default ":53053")
+        Listen address for embedded DNS-server (default "127.0.0.1:53053")
   -p path
         Short for: path
   -path string
@@ -57,7 +57,7 @@ If email parameter id omitted, it's going to be hostmaster@domain.xx (ie with th
 
 * TinyDNS
 
-Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` in your config. Where `domain.com`is the domain to create cert for, `dnsserver.somedomain.com` is FQDN for the host running goacmedns and `90` is the TTL for this record.
+Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:600` in your config. Where `domain.com`is the domain to create cert for, `dnsserver.somedomain.com` is FQDN for the host running goacmedns and `600` is the TTL for this record.
 
 * BIND
 
@@ -65,7 +65,7 @@ Create an entry like `&_acme-challenge.domain.com::dnsserver.somedomain.com:60` 
 
 ## Tips
 
-Redirect port 53 on incoming interface to example 53053 on localhost, and you could run goacmedns as an ordinary user.
+Redirect port 53 on incoming interface to for example 53053 on localhost, and you could run goacmedns as an ordinary user.
 
 Call goacmedns from a script which you put in a crontab job.
 
@@ -101,11 +101,12 @@ DNS delegation examples for more than TinyDNS
 
 Should maybe "staging" have it's own parameter (staging & S or s)?
 
-Test if [CAA record](https://support.dnsimple.com/articles/caa-record/) speeds up the "process"
+Test if [CAA records](https://en.wikipedia.org/wiki/DNS_Certification_Authority_Authorization) speeds up the "process"
 
 ## Known problems
 
 If listen's IP not defined (like ":53053") the DNS service not send answers from localhost
+
 ## Credits
 
 Alex @x1ddos, for his [snippet](https://github.com/golang/go/issues/17263#issuecomment-253149953)

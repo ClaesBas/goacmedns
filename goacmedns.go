@@ -47,9 +47,6 @@ func init() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:53053", "Listen address for embedded DNS-server")
 	flag.StringVar(&listen, "l", "127.0.0.1:53053", "Short for: `listen`")
 
-	//flag.StringVar(&hostName, "fqdn", "", "(*) FQDN (hostname) for the embedded DNS-server")
-	//flag.StringVar(&hostName, "f", "", "Short for: `fqdn`")
-
 	flag.IntVar(&keySize, "keysize", 2048, "Keysize of requested certificate")
 	flag.IntVar(&keySize, "k", 2048, "Short for: `keysize`")
 
@@ -70,6 +67,7 @@ func main() {
 
 	flag.Parse()
 
+	dnsServerRunning := false
 	extraError := ""
 
 	//Do some more "flag-checking" (setting extraError if...) !!!!!!
@@ -97,15 +95,10 @@ func main() {
 		email = "hostmaster@" + emailDomain
 	}
 
-	if len(workPath) == 1 {
-		if workPath != "/" {
-			workPath += "/"
-		}
-	} else {
-		if workPath[len(workPath)-1] != "/"[0] {
-			workPath += "/"
-		}
+	if workPath[len(workPath)-1] != "/"[0] {
+		workPath += "/"
 	}
+
 	var directoryURL string
 	if debug {
 		directoryURL = "https://acme-staging.api.letsencrypt.org/directory"
@@ -163,11 +156,11 @@ func main() {
 	// Register... (if new key)
 	if newKey {
 		acc, err := client.Register(ctx, initialAccount, prompt)
-		if debug {
-			log.Printf("New registered account: %+v", acc)
-		}
 		if err != nil {
 			log.Fatal(err)
+		}
+		if debug {
+			log.Printf("New registered account: %+v", acc)
 		}
 	}
 
@@ -225,13 +218,7 @@ func main() {
 			log.Fatal("domain authorization failed (" + a.Status + ")")
 		}
 		if verbose {
-			log.Println("Authorization succeded!")
-		}
-
-		closeDNSServer()
-
-		if debug {
-			log.Println("DNS server stopped")
+			log.Println("Authorization succeeded!")
 		}
 	}
 
@@ -250,9 +237,11 @@ func main() {
 			Bytes: privDer,
 		},
 	)
-	err = ioutil.WriteFile(workPath+"priv-"+domain+".key", privPem, 0600)
-	if err != nil {
+	if ioutil.WriteFile(workPath+"priv-"+domain+".key", privPem, 0600) != nil {
 		log.Fatal(err)
+	}
+	if verbose {
+		log.Printf("Private key for %s created and saved\n", domain)
 	}
 
 	req := &x509.CertificateRequest{
@@ -284,8 +273,21 @@ func main() {
 			Bytes: ders[1],
 		},
 	)
-	err = ioutil.WriteFile(workPath+domain+".crt", append(cert0, cert1...), 0600)
-	if err != nil {
+	if err = ioutil.WriteFile(workPath+domain+".crt", append(cert0, cert1...), 0600); err != nil {
 		log.Fatal(err)
+	}
+	if verbose {
+		log.Printf("Certificate for %s created and saved\n", domain)
+	}
+
+	if dnsServerRunning {
+		closeDNSServer()
+		if debug {
+			log.Println("DNS server stopped")
+		}
+	}
+
+	if debug {
+		log.Println("-------- That's all folks! ---------")
 	}
 }
