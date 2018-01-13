@@ -1,13 +1,10 @@
 # goacmedns
 
-Handle Let's Encrypt DNS challenges (not in production quality yet... or maybe)
+Handle Let's Encrypt DNS challenges with this program with embedded DNS functionality for the challenge.
 
 It's possible to delegate the subdomain `_acme-challenge` and handle LE (Let's Encrypt) DNS-challenges with one specific DNS-server (this utility/program, instead of waiting for "delegation" to many DNS servers before the challenge could be fulfilled). This also makes it possible to have most of the (other) DNS-functionality "outsourced" anywhere.
 
-The plan with this concept is to be able manage all your domain certs in one place with this program and LE's upcoming wildcard certs is only going to work with the DNS-challenge (what I've read).
-
-Initial version of this program uses a local TinyDNS-server to respond with the text-record for the LE DNS-challange.
-Future plan is to "embed" DNS-funcionality and make this application standalone (credit for this embed-idea: @PeterHellberg).
+The plan with this program is to be able manage all your domain certs in one place with this program and LE's upcoming wildcard certs is only going to work with the DNS-challenge (with API 2.0 in end of February).
 
 ## Usage
 
