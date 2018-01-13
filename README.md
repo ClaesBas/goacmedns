@@ -83,7 +83,9 @@ Call goacmedns from a script which you put in a crontab job.
 
 ## Todo
 
-Comment the examples above
+Comment the examples above (and maybe some more)
+
+Implement LE 2.0 API and Wildcard certs when it's released
 
 Clean up the "code"
 
@@ -91,7 +93,7 @@ Tag with version(0.0.0)
 
 Some testing (and maybe some go tests...)
 
-Get some feedback...
+Get some (more) feedback...
 
 Check out keysize possibilitys
 
@@ -103,9 +105,11 @@ Should maybe "staging" have it's own parameter (staging & S or s)?
 
 Test if [CAA records](https://en.wikipedia.org/wiki/DNS_Certification_Authority_Authorization) speeds up the "process"
 
+Eventually add dependencies with dep (just now, it's only golang.org/x/crypto/acme and github.com/miekg/dns)
+
 ## Known problems
 
-If listen's IP not defined (like ":53053") the DNS service not send answers from localhost
+If listen's IP not defined (like ":53053") the DNS service does not send answers from localhost
 
 ## Credits
 
