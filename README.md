@@ -89,8 +89,6 @@ Implement LE 2.0 API and Wildcard certs when it's released
 
 Clean up the "code"
 
-Tag with version(0.0.0)
-
 Some testing (and maybe some go tests...)
 
 Get some (more) feedback...
