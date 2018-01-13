@@ -199,6 +199,7 @@ func main() {
 
 		//Start DNS server serving the challenge
 		go serveDNSChallenge(listen, domain, tok)
+		dnsServerRunning = true
 
 		if verbose {
 			log.Println("Send Accept-request")
