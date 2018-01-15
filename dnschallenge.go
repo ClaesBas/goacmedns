@@ -25,9 +25,7 @@ func appendAnswer(m *dns.Msg, answer string) {
 func parseQuery(m *dns.Msg) {
 	for _, q := range m.Question {
 		if q.Qtype == dns.TypeTXT {
-			if verbose {
-				log.Printf("TXT query for %s\n", q.Name)
-			}
+			logVerbose("TXT query for " + q.Name)
 			appendAnswer(m, fmt.Sprintf("%s %d IN TXT %s", q.Name, timeOut, dnsChallengeString))
 		}
 	}
@@ -41,9 +39,7 @@ func handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 		parseQuery(m)
 	}
 	w.WriteMsg(m)
-	if debug {
-		log.Println("DNS-answer: " + m.String())
-	}
+	logDebug("DNS-answer: " + m.String())
 }
 
 func closeDNSServer() {
@@ -62,9 +58,7 @@ func serveDNSChallenge(addr, domainName, challenge string) {
 		log.Fatalf("Max time for challenge requests expired (%ds) from LE expired!", timeOut)
 	}()
 
-	if verbose {
-		log.Println("DNS server starting")
-	}
+	logVerbose("DNS server starting")
 	go func() {
 		serveUDP = &dns.Server{Addr: addr, Net: "udp"}
 		if err := serveUDP.ListenAndServe(); err != nil {
@@ -77,7 +71,5 @@ func serveDNSChallenge(addr, domainName, challenge string) {
 			log.Fatal(err)
 		}
 	}()
-	if debug {
-		log.Println("DNS server started")
-	}
+	logDebug("DNS server started")
 }

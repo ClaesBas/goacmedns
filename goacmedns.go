@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -27,14 +29,16 @@ var verbose bool
 var listen string
 var timeOut int
 
-//var hostName string
-
 //ACME-related
 var domain string
 var email string
 var keySize int
 
 var workPath string
+
+//Other global vars..
+var directoryURL string
+var dnsServerRunning bool
 
 func init() {
 
@@ -63,14 +67,22 @@ func init() {
 	flag.IntVar(&timeOut, "t", 90, "Short for: `timeout`")
 }
 
-func main() {
+func logDebug(text string) {
+	if debug {
+		log.Println(text)
+	}
+}
 
-	flag.Parse()
+func logVerbose(text string) {
+	if verbose {
+		log.Println(text)
+	}
+}
 
-	dnsServerRunning := false
+func checkParameters() {
+
 	extraError := ""
-
-	//Do some more "flag-checking" (setting extraError if...) !!!!!!
+	//Maye some more "flag-checking" (setting extraError if...) !!!!!!
 
 	if domain == "" || extraError != "" {
 		if extraError == "" {
@@ -99,131 +111,91 @@ func main() {
 		workPath += "/"
 	}
 
-	var directoryURL string
 	if debug {
 		directoryURL = "https://acme-staging.api.letsencrypt.org/directory"
 		verbose = true
 	} else {
 		directoryURL = "https://acme-v01.api.letsencrypt.org/directory"
 	}
+}
 
-	var key *rsa.PrivateKey
-	newKey := false
+func lookupAcmeHost(urlStr string) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := net.LookupHost(u.Hostname()); err != nil {
+		log.Fatal(err)
+	}
+	logDebug(u.Hostname() + " found (in DNS)")
+}
 
-	_, err := os.Stat(domain + ".key")
+func getOrCreateRSAPrivateKey(path string) (key *rsa.PrivateKey, newKey bool) {
+	newKey = false
+	_, err := os.Stat(path)
 	if err == nil {
-
-		keyFile, err := ioutil.ReadFile(workPath + domain + ".key")
+		keyFile, err := ioutil.ReadFile(path)
 		if err != nil {
 			log.Fatal(err)
 		}
 		pemBlock, _ := pem.Decode(keyFile)
-		key, err = x509.ParsePKCS1PrivateKey(pemBlock.Bytes)
-		if err != nil {
+		if key, err = x509.ParsePKCS1PrivateKey(pemBlock.Bytes); err != nil {
 			log.Fatal(err)
 		}
-
 	} else {
-
-		key, err = rsa.GenerateKey(rand.Reader, keySize)
-		if err != nil {
+		if key, err = rsa.GenerateKey(rand.Reader, keySize); err != nil {
 			log.Fatal(err)
 		}
-		if verbose {
-			log.Println("New rsa-key created!")
-		}
-
+		logVerbose("New rsa-key created!")
 		keydata := pem.EncodeToMemory(
 			&pem.Block{
 				Type:  "RSA PRIVATE KEY",
 				Bytes: x509.MarshalPKCS1PrivateKey(key),
 			},
 		)
-		err = ioutil.WriteFile(workPath+domain+".key", keydata, 0600)
-		if err != nil {
+		if err = ioutil.WriteFile(path, keydata, 0600); err != nil {
 			log.Fatal(err)
 		}
 		newKey = true
 	}
+	return key, newKey
+}
 
-	client := &acme.Client{Key: key, DirectoryURL: directoryURL}
-
-	initialAccount := &acme.Account{Contact: []string{"mailto:" + email}}
-	prompt := acme.AcceptTOS
-
+func registerNewAcmeAccount(client *acme.Client, email string) {
 	ctx := context.Background()
-
-	// Register... (if new key)
-	if newKey {
-		acc, err := client.Register(ctx, initialAccount, prompt)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if debug {
-			log.Printf("New registered account: %+v", acc)
-		}
-	}
-
-	a, err := client.Authorize(ctx, domain)
+	initialAccount := &acme.Account{Contact: []string{"mailto:" + email}}
+	acc, err := client.Register(ctx, initialAccount, acme.AcceptTOS)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if debug {
-		log.Println("Authorization.Status=" + a.Status)
-	}
+	logDebug(fmt.Sprintf("New registered account: %+v", acc))
+}
 
-	// If Client.Key is already authorized for domain
-	// Skip DNS record provisioning and go to client.CreateCert
-	if a.Status != acme.StatusValid {
-
-		// Find dns-01 challenge in a.Challenges.
-		// Let's assume the var name is challenge
-		var challengeToken = ""
-		var acceptChallenge *acme.Challenge
-		for _, challenge := range a.Challenges {
-			if challenge.Type == "dns-01" {
-				challengeToken = challenge.Token
-				//challengeURI = challenge.URI
-				acceptChallenge = challenge
-				break
-			}
-		}
-
-		tok, err := client.DNS01ChallengeRecord(challengeToken)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if debug {
-			log.Println("token=" + tok)
-		}
-
-		//Start DNS server serving the challenge
-		go serveDNSChallenge(listen, domain, tok)
-		dnsServerRunning = true
-
-		if verbose {
-			log.Println("Send Accept-request")
-		}
-		if _, err := client.Accept(ctx, acceptChallenge); err != nil {
-			log.Fatal(err)
-		}
-
-		if verbose {
-			log.Println("Wait for Authorization")
-		}
-		if a, err = client.WaitAuthorization(ctx, a.URI); err != nil {
-			log.Fatal(err)
-		}
-
-		if a.Status != acme.StatusValid {
-			log.Fatal("domain authorization failed (" + a.Status + ")")
-		}
-		if verbose {
-			log.Println("Authorization succeeded!")
+func getChallengeTokenAndAcceptChallenge(client *acme.Client, a *acme.Authorization) (string, *acme.Challenge) {
+	// Find dns-01 challenge in a.Challenges.
+	// Let's assume the var name is challenge
+	var challengeToken = ""
+	var acceptChallenge *acme.Challenge
+	for _, challenge := range a.Challenges {
+		if challenge.Type == "dns-01" {
+			challengeToken = challenge.Token
+			//challengeURI = challenge.URI
+			acceptChallenge = challenge
+			break
 		}
 	}
 
-	// Create the certificate.
+	tok, err := client.DNS01ChallengeRecord(challengeToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logDebug("token=" + tok)
+
+	return tok, acceptChallenge
+}
+
+func createCertPrivateKey() *ecdsa.PrivateKey {
+
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Fatal(err)
@@ -238,13 +210,16 @@ func main() {
 			Bytes: privDer,
 		},
 	)
-	if ioutil.WriteFile(workPath+"priv-"+domain+".key", privPem, 0600) != nil {
+	if ioutil.WriteFile(workPath+domain+".key", privPem, 0600) != nil {
 		log.Fatal(err)
 	}
-	if verbose {
-		log.Printf("Private key for %s created and saved\n", domain)
-	}
 
+	logVerbose("Private key for " + domain + " created and saved")
+
+	return priv
+}
+
+func createCertPublicKey(priv *ecdsa.PrivateKey, client *acme.Client) {
 	req := &x509.CertificateRequest{
 		DNSNames: []string{domain},
 		// EmailAddresses: []string{email},
@@ -255,7 +230,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	ctx := context.Background()
 	ders, _, err := client.CreateCert(ctx, csr, 90*24*time.Hour, true)
 	if err != nil {
 		log.Fatal(err)
@@ -277,18 +252,67 @@ func main() {
 	if err = ioutil.WriteFile(workPath+domain+".crt", append(cert0, cert1...), 0600); err != nil {
 		log.Fatal(err)
 	}
-	if verbose {
-		log.Printf("Certificate for %s created and saved\n", domain)
+	logVerbose("Certificate for " + domain + " created and saved")
+
+}
+
+func main() {
+
+	flag.Parse()
+
+	checkParameters()
+
+	lookupAcmeHost(directoryURL) // Be sure that we don't timeout later due to DNS
+
+	acmeKeyPath := workPath + domain + ".acmekey"
+
+	acmeKey, newKey := getOrCreateRSAPrivateKey(acmeKeyPath)
+	client := &acme.Client{Key: acmeKey, DirectoryURL: directoryURL}
+
+	if newKey {
+		registerNewAcmeAccount(client, email)
 	}
+
+	ctx := context.Background()
+
+	a, err := client.Authorize(ctx, domain)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logDebug("Authorization.Status=" + a.Status)
+
+	// If Client.Key is already authorized for domain
+	// Skip DNS record provisioning and go to client.CreateCert
+	if a.Status != acme.StatusValid {
+
+		tok, acceptChallenge := getChallengeTokenAndAcceptChallenge(client, a)
+
+		//Start DNS server serving the challenge
+		go serveDNSChallenge(listen, domain, tok)
+		dnsServerRunning = true
+
+		logVerbose("Send Accept-request")
+		if _, err := client.Accept(ctx, acceptChallenge); err != nil {
+			log.Fatal(err)
+		}
+		logVerbose("Wait for Authorization")
+		if a, err = client.WaitAuthorization(ctx, a.URI); err != nil {
+			log.Fatal(err)
+		}
+
+		if a.Status != acme.StatusValid {
+			log.Fatal("domain authorization failed (" + a.Status + ")")
+		}
+		logVerbose("Authorization succeeded!")
+	}
+
+	priv := createCertPrivateKey()
+	createCertPublicKey(priv, client)
 
 	if dnsServerRunning {
 		closeDNSServer()
-		if debug {
-			log.Println("DNS server stopped")
-		}
+		logDebug("DNS server stopped")
 	}
 
-	if debug {
-		log.Println("-------- That's all folks! ---------")
-	}
+	logDebug("-------- That's all folks! ---------")
 }
